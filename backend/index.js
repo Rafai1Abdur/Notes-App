@@ -20,8 +20,11 @@ app.get("/notes", (req, res) => {
 app.post("/notes", (req, res) => {
   const { text } = req.body;
   if (!text) return res.status(400).json({ error: "Note text required" });
-  notes.push({ text });
-  res.json({ message: "Note added" });
+  
+  const newNote = { id: Date.now(), text }; // add unique ID
+  notes.push(newNote);
+  
+  res.json(newNote); // return new note to frontend
 });
 
 app.listen(PORT, () => {
