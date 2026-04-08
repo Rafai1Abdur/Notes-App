@@ -1,66 +1,63 @@
-const fs = require("fs");
-
-// In-memory storage for notes
-let notes = JSON.parse(fs.readFileSync("data/notes.json"));
-
-// Save notes to file
-const saveNotes = () => {
-  fs.writeFileSync("data/notes.json", JSON.stringify(notes, null, 2));
-};
+const Note = require("../models/Note");
 
 // GET /notes → return all notes
-exports.getNotes = (req, res) => {
-  res.json(notes);
+exports.getNotes = async (req, res) => {
+  try {
+    const notes = await Note.find(); // fetch all notes from MongoDB
+    res.json(notes);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 };
 
-exports.addNote = (req, res) => {
+// POST /notes → add a new note
+exports.addNote = async (req, res) => {
   const { text } = req.body;
 
   if (!text) return res.status(400).json({ error: "Note text required" });
 
-  const newNote = { id: Date.now(), text };
-  notes.push(newNote);
-  saveNotes();
-
-  res.json(newNote);
+  try {
+    const newNote = await Note.create({ text });
+    res.json(newNote);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 };
 
 // DELETE /notes → delete a note by ID
-exports.deleteNote = (req, res) => {
+exports.deleteNote = async (req, res) => {
   const { id } = req.body;
 
   if (!id) return res.status(400).json({ error: "Note ID required" });
 
-  const initialLength = notes.length;
+  try {
+    const deletedNote = await Note.findByIdAndDelete(id);
 
-  notes = notes.filter(note => note.id !== id);
-  saveNotes();
+    if (!deletedNote) return res.status(404).json({ error: "Note not found" });
 
-  if (notes.length === initialLength) {
-    return res.status(404).json({ error: "Note not found" });
+    res.json({ message: "Note deleted" });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
   }
-
-  res.json({ message: "Note deleted" });
 };
 
 // PUT /notes → update a note by ID
-exports.updateNote = (req, res) => {
-  console.log("UPDATE REQUEST:", req.body);
-
+exports.updateNote = async (req, res) => {
   const { id, text } = req.body;
 
-  if (!id || !text) {
-    return res.status(400).json({ error: "ID and text required" });
+  if (!id || !text) return res.status(400).json({ error: "ID and text required" });
+
+  try {
+    const updatedNote = await Note.findByIdAndUpdate(
+      id,
+      { text },
+      { new: true } // return the updated document
+    );
+
+    if (!updatedNote) return res.status(404).json({ error: "Note not found" });
+
+    res.json({ message: "Note updated", note: updatedNote });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
   }
-
-  const note = notes.find(n => n.id === id);
-
-  if (!note) {
-    return res.status(404).json({ error: "Note not found" });
-  }
-
-  note.text = text;
-  saveNotes();
-
-  res.json({ message: "Note updated", note });
 };
