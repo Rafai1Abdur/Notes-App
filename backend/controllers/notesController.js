@@ -3,7 +3,7 @@ const Note = require("../Note");
 // GET /notes → return all notes
 exports.getNotes = async (req, res) => {
   try {
-    const notes = await Note.find(); // fetch all notes from MongoDB
+    const notes = await Note.find();
     res.json(notes);
   } catch (err) {
     res.status(500).json({ error: "Server error" });
@@ -24,9 +24,9 @@ exports.addNote = async (req, res) => {
   }
 };
 
-// DELETE /notes → delete a note by ID
+// DELETE /notes/:id → delete a note by ID
 exports.deleteNote = async (req, res) => {
-  const { id } = req.body;
+  const { id } = req.params; // 🔹 get ID from URL
 
   if (!id) return res.status(400).json({ error: "Note ID required" });
 
@@ -41,9 +41,10 @@ exports.deleteNote = async (req, res) => {
   }
 };
 
-// PUT /notes → update a note by ID
+// PUT /notes/:id → update a note by ID
 exports.updateNote = async (req, res) => {
-  const { id, text } = req.body;
+  const { id } = req.params; // 🔹 get ID from URL
+  const { text } = req.body;
 
   if (!id || !text) return res.status(400).json({ error: "ID and text required" });
 
@@ -51,7 +52,7 @@ exports.updateNote = async (req, res) => {
     const updatedNote = await Note.findByIdAndUpdate(
       id,
       { text },
-      { new: true } // return the updated document
+      { new: true } // return updated note
     );
 
     if (!updatedNote) return res.status(404).json({ error: "Note not found" });
