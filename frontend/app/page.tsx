@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 
 export default function Home() {
-  const [notes, setNotes] = useState<{ id: number; text: string }[]>([]);
+  const [notes, setNotes] = useState<{ _id: number; text: string }[]>([]);
   const [input, setInput] = useState("");
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   // ------------------------
   // 🔹 Fetch notes from backend
@@ -40,15 +40,15 @@ export default function Home() {
   // 🔹 Edit note function
   // ------------------------
   const addNote = async () => {
-    console.log("Editing ID:", editingId);
+    // console.log("Editing ID:", editingId); //for testing purposes
   if (!input.trim()) return;
 
-  if (editingId !== null) {
+  if (editingId /* !== null */) {
     // 🔹 UPDATE mode
-    await fetch("http://localhost:5000/notes", {
+    await fetch(`http://localhost:5000/notes/${editingId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: editingId, text: input }),
+      body: JSON.stringify({ /* id: editingId,*/ text: input }),
     });
 
     setEditingId(null); // exit edit mode
@@ -68,11 +68,11 @@ export default function Home() {
   // ------------------------
   // 🔹 Delete note function (NEW)
   // ------------------------
-  const deleteNote = async (id: number) => {
-    await fetch("http://localhost:5000/notes", {
+  const deleteNote = async (_id: number) => {
+    await fetch(`http://localhost:5000/notes/${_id}`, {
       method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id })
+      /* headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }) */
     });
 
     fetchNotes(); // refresh notes after deleting
@@ -106,7 +106,7 @@ export default function Home() {
   ) : (
     notes.map((note) => (
       <li
-        key={note.id}
+        key={note._id}
         className="flex justify-between items-center bg-black p-3 mb-2 rounded shadow"
       >
         <span>{note.text}</span>
@@ -114,7 +114,7 @@ export default function Home() {
         <button
         onClick={() => {
           setInput(note.text);      // fill input
-          setEditingId(note.id);    // set edit mode
+          setEditingId(note._id);    // set edit mode
         }}
         className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
         >
@@ -122,7 +122,7 @@ export default function Home() {
         </button>
 
         <button
-          onClick={() => deleteNote(note.id)}
+          onClick={() => deleteNote(note._id)}
           className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
         >
           Delete
