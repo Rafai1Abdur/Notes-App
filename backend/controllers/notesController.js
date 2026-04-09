@@ -1,4 +1,4 @@
-const Note = require("../models/Note");
+const Note = require("../Note");
 
 // GET /notes → return all notes
 exports.getNotes = async (req, res) => {
